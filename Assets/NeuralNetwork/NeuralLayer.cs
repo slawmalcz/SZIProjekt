@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Assets.NeuralNetwork {
     class NeuralLayer {
@@ -36,8 +32,8 @@ namespace Assets.NeuralNetwork {
             }
         }
 
-        public void Log() {
-            Console.WriteLine("{0}, Weight: {1}", Name, Weight);
+        public string Log() {
+            return string.Format("{0}, Weight: {1}", Name, Weight);
         }
     }
 }

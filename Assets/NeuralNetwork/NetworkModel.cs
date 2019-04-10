@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Assets.NeuralNetwork {
     class NetworkModel {
@@ -78,23 +76,13 @@ namespace Assets.NeuralNetwork {
             }
         }
 
-        public void Print() {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Name");
-            dt.Columns.Add("Neurons");
-            dt.Columns.Add("Weight");
+        public string Print() {
+            var ret = "";
+            ret = string.Format("{0,10}|{1,10}|{2,10} \n", "Name", "Neurons", "Weight");
 
-            foreach(var element in Layers) {
-                DataRow row = dt.NewRow();
-                row[0] = element.Name;
-                row[1] = element.Neurons.Count;
-                row[2] = element.Weight;
-
-                dt.Rows.Add(row);
-            }
-
-            ConsoleTableBuilder builder = ConsoleTableBuilder.From(dt);
-            builder.ExportAndWrite();
+            foreach(var element in Layers)
+                ret += string.Format("{0,10}|{1,10}|{2,10} \n", element.Name, element.Neurons.Count, element.Weight);
+            return ret;
         }
 
         private void ComputeOutput() {

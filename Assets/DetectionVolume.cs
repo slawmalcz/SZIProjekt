@@ -1,26 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets {
-    class DetectionVolume : PerceptionVolume{
+    class DetectionVolume : PerceptionVolume {
         public Material detectionOn;
         public Material detectionOff;
 
-        public bool IsObstructed {
-            get {
-                return this.detectedObjects.Count > 0;
-            }
-        }
+        public bool IsObstructed => detectedObjects.Count > 0;
 
         private void Update() {
             if(IsObstructed) {
                 GetComponent<Renderer>().material = detectionOn;
-            }else {
+            } else {
                 GetComponent<Renderer>().material = detectionOff;
             }
+        }
+
+        private float CheckFillingPercentage() {
+            var ret = 0.0f;
+            if(detectedObjects.Count > 0) {
+
+            }
+            return ret;
         }
     }
 }

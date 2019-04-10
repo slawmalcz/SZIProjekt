@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Assets.NeuralNetwork {
+﻿namespace Assets.NeuralNetwork {
     class Dendrite {
         public Dendrite() {
             InputPulse = new Pulse();
