@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Utilities {
-    class BoxParameters {
+    public class BoxParameters {
         public readonly float lowerXBoundary;
         public readonly float upperXBoundary;
         public readonly float lowerYBoundary;
@@ -19,17 +19,6 @@ namespace Assets.Utilities {
 
         public float Volume => (upperXBoundary - lowerXBoundary) * (upperYBoundary - lowerYBoundary) * (upperZBoundary - lowerZBoundary);
 
-        public BoxParameters(BoxCollider collider) {
-            this.position = collider.transform.position;
-            this.size = collider.size;
-            lowerXBoundary = collider.transform.position.x - (collider.size.x / 2);
-            upperXBoundary = collider.transform.position.x + (collider.size.x / 2);
-            lowerYBoundary = collider.transform.position.y - (collider.size.y / 2);
-            upperYBoundary = collider.transform.position.y + (collider.size.y / 2);
-            lowerZBoundary = collider.transform.position.z - (collider.size.z / 2);
-            upperYBoundary = collider.transform.position.z + (collider.size.z / 2);
-        }
-
         public BoxParameters(Vector3 position, Vector3 size) {
             this.position = position;
             this.size = size;
@@ -38,33 +27,49 @@ namespace Assets.Utilities {
             lowerYBoundary = position.y - (size.y / 2);
             upperYBoundary = position.y + (size.y / 2);
             lowerZBoundary = position.z - (size.z / 2);
-            upperYBoundary = position.z + (size.z / 2);
+            upperZBoundary = position.z + (size.z / 2);
         }
+
+        public BoxParameters(BoxCollider collider) : this(collider.transform.position, collider.transform.lossyScale) {
+        }
+
+        public BoxParameters(float lowerXBoundary, float upperXBoundary, float lowerYBoundary, float upperYBoundary, float lowerZBoundary, float upperZBoundary) :
+            this(new Vector3((lowerXBoundary + upperXBoundary) / 2, (lowerYBoundary + upperYBoundary) / 2, (lowerZBoundary + lowerZBoundary) / 2),
+                  new Vector3((upperXBoundary - lowerXBoundary), (upperYBoundary - lowerYBoundary), (upperZBoundary - lowerZBoundary))) {
+        }
+
         public static BoxParameters operator -(BoxParameters x, BoxParameters y) {
             return Substract(x, y);
         }
 
         public static BoxParameters Substract(BoxParameters from, BoxParameters substract) {
             float newLowerXBoundry = 0;
-            if(substract.lowerXBoundary < from.lowerXBoundary && substract.upperXBoundary > from.lowerXBoundary && substract.lowerXBoundary < from.upperXBoundary && substract.upperXBoundary < from.upperXBoundary) {
+            float newUpperXBoundry = 0;
+            ClipingBoundries(from.lowerXBoundary, from.upperXBoundary, substract.lowerXBoundary, substract.upperXBoundary, ref newLowerXBoundry, ref newUpperXBoundry);
+            float newLowerYBoundry = 0;
+            float newUpperYBoundry = 0;
+            ClipingBoundries(from.lowerYBoundary, from.upperYBoundary, substract.lowerYBoundary, substract.upperYBoundary, ref newLowerYBoundry, ref newUpperYBoundry);
+            float newLowerZBoundry = 0;
+            float newUpperZBoundary = 0;
+            ClipingBoundries(from.lowerZBoundary, from.upperZBoundary, substract.lowerZBoundary, substract.upperZBoundary, ref newLowerZBoundry, ref newUpperZBoundary);
+            return new BoxParameters(newLowerXBoundry, newUpperXBoundry, newLowerYBoundry, newUpperYBoundry, newLowerZBoundry, newUpperZBoundary);
+        }
+
+        private static void ClipingBoundries(float fromLowerBoundry, float fromUpperBoundry, float sunstractLowerBoundry, float substractUpperBoundry, ref float newLower, ref float newUpper) {
+            if(sunstractLowerBoundry < fromLowerBoundry && substractUpperBoundry > fromLowerBoundry &&
+               sunstractLowerBoundry < fromUpperBoundry && substractUpperBoundry < fromUpperBoundry) {
                 //Option 1
-                newLowerXBoundry = substract.upperXBoundary;
-            }
-            if(substract.lowerXBoundary > from.lowerXBoundary && substract.upperXBoundary > from.lowerXBoundary && substract.lowerXBoundary < from.upperXBoundary && substract.upperXBoundary < from.upperXBoundary) {
-                //Option 2
-                newLowerXBoundry = from.lowerXBoundary;
-            }
-            if(substract.lowerXBoundary > from.lowerXBoundary && substract.upperXBoundary > from.lowerXBoundary && substract.lowerXBoundary < from.upperXBoundary && substract.upperXBoundary > from.upperXBoundary) {
+                newLower = substractUpperBoundry;
+                newUpper = fromUpperBoundry;
+            } else if(sunstractLowerBoundry > fromLowerBoundry && substractUpperBoundry > fromLowerBoundry &&
+                      sunstractLowerBoundry < fromUpperBoundry && substractUpperBoundry > fromUpperBoundry) {
                 //Option 3
-                newLowerXBoundry = from.lowerXBoundary;
-            }
-            if(substract.lowerXBoundary > from.lowerXBoundary && substract.upperXBoundary > from.lowerXBoundary && substract.lowerXBoundary < from.upperXBoundary && substract.upperXBoundary > from.upperXBoundary) {
-                //Option 3
-                newLowerXBoundry = from.lowerXBoundary;
-            }
-            if(substract.lowerXBoundary > from.lowerXBoundary && substract.upperXBoundary > from.lowerXBoundary && substract.lowerXBoundary < from.upperXBoundary && substract.upperXBoundary > from.upperXBoundary) {
-                //Option 3
-                newLowerXBoundry = from.lowerXBoundary;
+                newLower = fromLowerBoundry;
+                newUpper = sunstractLowerBoundry;
+            } else {
+                //Option 4
+                newLower = fromLowerBoundry;
+                newUpper = fromUpperBoundry;
             }
         }
     }

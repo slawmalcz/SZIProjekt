@@ -1,14 +1,15 @@
-﻿using System.Collections;
+﻿using Assets.Utilities;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PerceptionVolume : MonoBehaviour {
-    public Collider perceptionFustum;
+    public BoxParameters perceptionFustum;
     public List<GameObject> detectedObjects;
 
     private void Awake() {
         detectedObjects = new List<GameObject>();
-        perceptionFustum = GetComponent<Collider>();
+        perceptionFustum = new BoxParameters(GetComponent<BoxCollider>());
     }
 
     protected void OnTriggerEnter(Collider other) {

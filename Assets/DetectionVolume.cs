@@ -6,6 +6,7 @@ namespace Assets {
         public Material detectionOff;
 
         public bool IsObstructed => detectedObjects.Count > 0;
+        public float FillingPercentage => CheckFillingPercentage();
 
         private void Update() {
             if(IsObstructed) {
@@ -16,11 +17,14 @@ namespace Assets {
         }
 
         private float CheckFillingPercentage() {
-            var ret = 0.0f;
+            var ret = perceptionFustum;
             if(detectedObjects.Count > 0) {
-
+                foreach(var detected in detectedObjects) {
+                    var toDelete = ret - new Utilities.BoxParameters(detected.GetComponent<BoxCollider>());
+                    ret -= new Utilities.BoxParameters(detected.GetComponent<BoxCollider>());
+                }
             }
-            return ret;
+            return ret.Volume / perceptionFustum.Volume;
         }
     }
 }

@@ -1,4 +1,3 @@
-C:\Users\Mindi\Desktop\SZIProjekt\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
 C:\Users\Mindi\Desktop\SZIProjekt\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
 C:\Users\Mindi\Desktop\SZIProjekt\Temp\bin\Debug\Assembly-CSharp.dll
 C:\Users\Mindi\Desktop\SZIProjekt\Temp\bin\Debug\Assembly-CSharp.pdb
@@ -280,3 +279,4 @@ C:\Users\Mindi\Desktop\SZIProjekt\Temp\bin\Debug\UnityEngine.SpatialTracking.xml
 C:\Users\Mindi\Desktop\SZIProjekt\obj\Debug\Assembly-CSharp.csproj.CopyComplete
 C:\Users\Mindi\Desktop\SZIProjekt\obj\Debug\Assembly-CSharp.dll
 C:\Users\Mindi\Desktop\SZIProjekt\obj\Debug\Assembly-CSharp.pdb
+C:\Users\Mindi\Desktop\SZIProjekt\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache

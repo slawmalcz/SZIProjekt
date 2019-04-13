@@ -1,40 +1,39 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace Assets.NeuralNetwork {
-    class Neuron {
+    public class Neuron {
+        private const double ACTIVATION_TRESHOLD = 1;
+
+        public int Id { get; set; }
+
         public List<Dendrite> Dendrites { get; set; }
 
+        [XmlIgnoreAttribute]
         public Pulse OutputPulse { get; set; }
 
-        public Neuron() {
-            Dendrites = new List<Dendrite>();
+        public Neuron(int id, List<Dendrite> dendrites) {
+            Dendrites = dendrites;
             OutputPulse = new Pulse();
+            Id = id;
         }
 
-        public void Fire() {
-            OutputPulse.Value = Sum();
+        public Neuron(Func<int> idAssigner) : this(idAssigner.Invoke(), new List<Dendrite>()) { }
 
-            OutputPulse.Value = Activation(OutputPulse.Value);
-        }
+        public Neuron() : this(-1, new List<Dendrite>()) { }
 
-        public void UpdateWeights(double new_weights) {
-            foreach(var terminal in Dendrites) {
-                terminal.SynapticWeight = new_weights;
-            }
-        }
+        public void Fire() => OutputPulse.Value = Activation(Sum());
+
+        //TODO:: This implicate that this neural network is binary
+        private double Activation(double input) => input / Dendrites.Count;
 
         private double Sum() {
             double computeValue = 0.0f;
-            foreach(var d in Dendrites) {
+            foreach(var d in Dendrites)
                 computeValue += d.InputPulse.Value * d.SynapticWeight;
-            }
-
             return computeValue;
         }
 
-        private double Activation(double input) {
-            double threshold = 1;
-            return input <= threshold ? 0 : threshold;
-        }
     }
 }

@@ -64,8 +64,8 @@
     <Compile Include="Assets\ForkLiftAgentController.cs" />
     <Compile Include="Assets\NeuralNetwork\Dendrite.cs" />
     <Compile Include="Assets\NeuralNetwork\NetworkModel.cs" />
-    <Compile Include="Assets\NeuralNetwork\NeuralData.cs" />
     <Compile Include="Assets\NeuralNetwork\NeuralLayer.cs" />
+    <Compile Include="Assets\NeuralNetwork\NeuralNetwork.cs" />
     <Compile Include="Assets\NeuralNetwork\Neuron.cs" />
     <Compile Include="Assets\NeuralNetwork\Pulse.cs" />
     <Compile Include="Assets\PerceptionVolume.cs" />
