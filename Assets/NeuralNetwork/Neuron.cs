@@ -25,7 +25,6 @@ namespace Assets.NeuralNetwork {
 
         public void Fire() => OutputPulse.Value = Activation(Sum());
 
-        //TODO:: This implicate that this neural network is binary
         private double Activation(double input) => input / Dendrites.Count;
 
         private double Sum() {

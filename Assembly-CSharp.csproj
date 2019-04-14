@@ -60,6 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\AgenSpawnerController.cs" />
     <Compile Include="Assets\DetectionVolume.cs" />
     <Compile Include="Assets\ForkLiftAgentController.cs" />
     <Compile Include="Assets\NeuralNetwork\Dendrite.cs" />

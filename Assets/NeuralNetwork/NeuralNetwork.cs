@@ -6,7 +6,7 @@ using System.Xml.Serialization;
 using UnityEngine;
 
 namespace Assets.NeuralNetwork {
-    class NeuralNetwork {
+    public class NeuralNetwork {
         private const double MUTATOR_PERCENTAGE = 0.1;
         private NetworkModel model;
 
@@ -42,6 +42,8 @@ namespace Assets.NeuralNetwork {
 
         public List<double> AskNetwork(List<float> inputVector) => model.AskNetwork(inputVector);
 
+        public double NetworkWeightSum() => model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Sum(z => z.SynapticWeight)));
+
         //STATIC MUTATROS AND CROSSBREEDERS
 
         public static NeuralNetwork CrossBread(NeuralNetwork father, NeuralNetwork mother) {
@@ -66,7 +68,7 @@ namespace Assets.NeuralNetwork {
             }
         }
 
-        public static NeuralNetwork Mutate(NeuralNetwork network) {
+        public static NeuralNetwork Mutate(NeuralNetwork network,double mutationPercentage = MUTATOR_PERCENTAGE,float mutationForce = 2) {
             var ret = network;
             var random = new System.Random();
             for(var layerCounter = 0; layerCounter < ret.model.Layers.Count; layerCounter++) {
@@ -79,7 +81,7 @@ namespace Assets.NeuralNetwork {
                         //Decide if element shoud be modified
                         if(random.NextDouble() > MUTATOR_PERCENTAGE) {
                             //mutate element
-                            var mutator = random.NextDouble() * 2 - 1;
+                            var mutator = (random.NextDouble() * 2 - 1) * mutationForce;
                             ret.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight = handledDendrite.SynapticWeight * mutator;
                         }
                     }
@@ -110,24 +112,23 @@ namespace Assets.NeuralNetwork {
             writer.Close();
         }
 
-        public void Deserialize(string fileName) {
+        public static NeuralNetwork Deserialize(string fileName) {
             var serializer = new XmlSerializer(typeof(NetworkModel));
             serializer.UnknownNode += new
             XmlNodeEventHandler(Serializer_UnknownNode);
             serializer.UnknownAttribute += new
             XmlAttributeEventHandler(Serializer_UnknownAttribute);
             var fs = new FileStream(fileName, FileMode.Open);
-            model = (NetworkModel)serializer.Deserialize(fs);
-            inputLayer = model.Layers.First();
-            outputLayer = model.Layers.Last();
-            hiddenLayers = model.Layers;
-            hiddenLayers.Remove(inputLayer);
-            hiddenLayers.Remove(outputLayer);
+            var model = (NetworkModel)serializer.Deserialize(fs);
+            var ret = new NeuralNetwork(0, 0) {
+                model = model
+            };
+            return ret;
         }
 
-        protected void Serializer_UnknownNode(object sender, XmlNodeEventArgs e) => Console.WriteLine("Unknown Node:" + e.Name + "\t" + e.Text);
+        protected static void Serializer_UnknownNode(object sender, XmlNodeEventArgs e) => Console.WriteLine("Unknown Node:" + e.Name + "\t" + e.Text);
 
-        protected void Serializer_UnknownAttribute(object sender, XmlAttributeEventArgs e) => Console.WriteLine("Unknown attribute " + e.Attr.Name + "='" + e.Attr.Value + "'");
+        protected static void Serializer_UnknownAttribute(object sender, XmlAttributeEventArgs e) => Console.WriteLine("Unknown attribute " + e.Attr.Name + "='" + e.Attr.Value + "'");
 
         // Operator Overrides
 
@@ -140,11 +141,14 @@ namespace Assets.NeuralNetwork {
 
         public override bool Equals(object value) {
             var other = value as NeuralNetwork;
-            return !System.Object.ReferenceEquals(null, other)
+            //TODO:: That's a lie
+            return true;
+                /*!System.Object.ReferenceEquals(null, other)
                 && model.Layers.Count == other.model.Layers.Count //Layers count equality
                 && model.Layers.Sum(x => x.Neurons.Count) == other.model.Layers.Sum(x => x.Neurons.Count)//Neuron count equality
                 && model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Count)) == other.model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Count)) // Dendrites count equality
                 && model.Layers.Any(x => other.model.Layers.Any(y => y.Neurons.Count == x.Neurons.Count && y.Name == x.Name)); // Neurons in Layers Count
+                */
         }
     }
 }
