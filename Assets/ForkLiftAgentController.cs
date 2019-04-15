@@ -8,6 +8,7 @@ public class ForkLiftAgentController : MonoBehaviour {
     public NeuralNetwork askedNetwork;
 
     public float MAX_SPEAD = 10;
+    public int colisionCounter = 0;
 
     // Use this for initialization
     void Start() {
@@ -33,5 +34,8 @@ public class ForkLiftAgentController : MonoBehaviour {
         lookAtPoint.y = transform.position.y;
         transform.LookAt(lookAtPoint);
         transform.position = calculatedDestination;
+    }
+    private void OnCollisionEnter(Collision collision) {
+        colisionCounter++;
     }
 }

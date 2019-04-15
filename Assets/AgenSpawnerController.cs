@@ -52,9 +52,8 @@ public class AgenSpawnerController : MonoBehaviour {
                     currentAgent.transform.position = transform.position;
                     if(population.Count == 0) {
                         var differ = new NeuralNetwork(403, 3);
-                        differ.AddNextLayer(new NeuralLayer(400, modelInUse.NeuronIdAssigner, "H(400)"));
+                        differ.AddNextLayer(new NeuralLayer(1600, modelInUse.NeuronIdAssigner, "H(1600)"));
                         differ.AddNextLayer(new NeuralLayer(100, modelInUse.NeuronIdAssigner, "H(100)"));
-                        differ.AddNextLayer(new NeuralLayer(20, modelInUse.NeuronIdAssigner, "H(20)"));
                         differ.Build();
                         currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork = differ;
                     } else {
@@ -68,10 +67,12 @@ public class AgenSpawnerController : MonoBehaviour {
                 //Ending agent
                 if(currentAgentSpawningTime + AGENT_LIFE_TIME < Time.fixedTime) {
                     var distance = Vector3.Distance(destination.transform.position, currentAgent.transform.position);
+                    var collisions = currentAgent.GetComponent<ForkLiftAgentController>().colisionCounter;
+                    var performance = distance - collisions;
                     //Debug.Log(distance);
                     var path = string.Format(NEURAL_PATH_PREFAB, population.Count);
                     currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork.Serialize(path);
-                    population.Add(new Tuple<float, string>(distance, path));
+                    population.Add(new Tuple<float, string>(performance, path));
                     //Instantiet pointer
                     var pointer = Instantiate(pointerPrefab);
                     pointer.transform.parent = pointerLayer.transform;
