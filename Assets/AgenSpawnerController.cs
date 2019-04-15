@@ -38,7 +38,7 @@ public class AgenSpawnerController : MonoBehaviour {
 
     private bool IsBusy = false;
 
-    private double SecondBestResoult => (population.Count < 2) ? 0 : population.OrderBy(x => x.Item1).ToArray()[1].Item1;
+    private double SecondBestResoult => (population.Count < 2) ? double.PositiveInfinity : population.OrderBy(x => x.Item1).ToArray()[1].Item1;
 
     void Start() {
         //Loading default network layout if needed
@@ -72,13 +72,14 @@ public class AgenSpawnerController : MonoBehaviour {
                 //Ending agent
                 if(currentAgentSpawningTime + AgentLifeTime < Time.fixedTime) {
                     //Calculating succes rate
-                    var succesRate = Vector3.Distance(destination.transform.position, currentAgent.transform.position);
+                    var succesRate = Vector3.Distance(destination.transform.position, currentAgent.transform.position)
+                        + currentAgent.GetComponent<ForkLiftAgentController>().collisions;
+                    var path = string.Format(NEURAL_PATH_PREFAB, population.Count);
                     if(succesRate < SecondBestResoult) {
                         //Seriallization take time and i dont need to save networks with bad resoults
-                        var path = string.Format(NEURAL_PATH_PREFAB, population.Count);
                         currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork.Serialize(path);
-                        population.Add(new Tuple<float, string>(succesRate, path));
                     }
+                    population.Add(new Tuple<float, string>(succesRate, path));
                     //Instantiet pointer
                     var pointer = Instantiate(pointerPrefab);
                     pointer.transform.parent = pointerLayer.transform;

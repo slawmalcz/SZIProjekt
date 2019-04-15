@@ -6,12 +6,9 @@ public class ForkLiftAgentController : MonoBehaviour {
     public Percepton perception;
     public GameObject targetPlace;
     public NeuralNetwork askedNetwork;
+    public int collisions = 0;
 
-    public float MAX_SPEAD = 10;
-
-    // Use this for initialization
-    void Start() {
-    }
+    public float MAX_SPEAD = 1;
 
     // Update is called once per frame
     void Update() {
@@ -33,5 +30,10 @@ public class ForkLiftAgentController : MonoBehaviour {
         lookAtPoint.y = transform.position.y;
         transform.LookAt(lookAtPoint);
         transform.position = calculatedDestination;
+    }
+
+    private void OnCollisionEnter(Collision collision) {
+        if(collision.gameObject.CompareTag("Ground")) return;
+        collisions++;
     }
 }

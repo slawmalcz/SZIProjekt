@@ -792,10 +792,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b97623af7dee637438f88b977e12f342, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AgentLifeTime: 5
+  AgentLifeTime: 10
   PopulationSize: 10
   GenerationSize: 200
-  TimeAcceleration: 2
+  TimeAcceleration: 3
   networkLayout: 96010000400600006400000003000000
   mutationBasicChance: 0.05
   mutationDegradingCance: 0.1
