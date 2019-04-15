@@ -23,7 +23,7 @@ public class ForkLiftAgentController : MonoBehaviour {
         networkData.AddRange(perception.GetDetectionData());
         var answer = askedNetwork.AskNetwork(networkData);
         //TODO:: Not shure of this
-        var destination = new Vector3((float)answer[0], (float)answer[1], (float)answer[2]);
+        var destination = new Vector3((float)answer[0], /*(float)answer[1]*/ 0, (float)answer[2]);
         var pointToTravel = destination * Time.deltaTime * MAX_SPEAD;
         var calculatedDestination = transform.position + pointToTravel;
         var lookAtPoint = calculatedDestination;

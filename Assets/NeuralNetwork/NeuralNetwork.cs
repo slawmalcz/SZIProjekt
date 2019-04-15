@@ -56,7 +56,7 @@ namespace Assets.NeuralNetwork {
                         for(var dendriteCounter = 0; dendriteCounter < handledNeuron.Dendrites.Count; dendriteCounter++) {
                             var handledDendrite = handledNeuron.Dendrites[dendriteCounter];
                             tempModel.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight =
-                                (handledDendrite.SynapticWeight + mother.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight) / 2;
+                                (handledDendrite.SynapticWeight + mother.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight)/2;
                         }
                     }
                 }
@@ -68,8 +68,8 @@ namespace Assets.NeuralNetwork {
             }
         }
 
-        public static NeuralNetwork Mutate(NeuralNetwork network,double mutationPercentage = MUTATOR_PERCENTAGE,float mutationForce = 2) {
-            var ret = network;
+        public static NeuralNetwork Mutate(NeuralNetwork network,double mutationPercentage = MUTATOR_PERCENTAGE,float mutationForce = 0.1f) {
+            var ret = (NeuralNetwork)network.MemberwiseClone();
             var random = new System.Random();
             for(var layerCounter = 0; layerCounter < ret.model.Layers.Count; layerCounter++) {
                 var handeldLayer = ret.model.Layers[layerCounter];
@@ -79,10 +79,10 @@ namespace Assets.NeuralNetwork {
                         var handledDendrite = handledNeuron.Dendrites[dendriteCounter];
 
                         //Decide if element shoud be modified
-                        if(random.NextDouble() > MUTATOR_PERCENTAGE) {
+                        if(random.NextDouble() < MUTATOR_PERCENTAGE) {
                             //mutate element
                             var mutator = (random.NextDouble() * 2 - 1) * mutationForce;
-                            ret.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight = handledDendrite.SynapticWeight * mutator;
+                            ret.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight = handledDendrite.SynapticWeight + handledDendrite.SynapticWeight * mutator;
                         }
                     }
                 }
@@ -120,9 +120,20 @@ namespace Assets.NeuralNetwork {
             XmlAttributeEventHandler(Serializer_UnknownAttribute);
             var fs = new FileStream(fileName, FileMode.Open);
             var model = (NetworkModel)serializer.Deserialize(fs);
-            var ret = new NeuralNetwork(0, 0) {
-                model = model
-            };
+            var ret = new NeuralNetwork(model.Layers.First().Neurons.Count,model.Layers.Last().Neurons.Count);
+            foreach(var layer in model.Layers) {
+                if(model.Layers.First() == layer || model.Layers.Last() == layer) continue;
+                ret.AddNextLayer(new NeuralLayer(layer.Neurons.Count,ret.NeuronIdAssigner,layer.Name));
+            }
+            ret.Build();
+            //assign new weights
+            for(var i = 0;i< model.Layers.Count; i++) {
+                for(var j = 0; j < model.Layers[i].Neurons.Count; j++) {
+                    for(var k = 0; k < model.Layers[i].Neurons[j].Dendrites.Count; k++) {
+                        ret.model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight = model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight;
+                    }
+                }
+            }
             return ret;
         }
 
@@ -131,6 +142,25 @@ namespace Assets.NeuralNetwork {
         protected static void Serializer_UnknownAttribute(object sender, XmlAttributeEventArgs e) => Console.WriteLine("Unknown attribute " + e.Attr.Name + "='" + e.Attr.Value + "'");
 
         // Operator Overrides
+
+        public NeuralNetwork Clone() {
+            var model = this.model;
+            var ret = new NeuralNetwork(model.Layers.First().Neurons.Count, model.Layers.Last().Neurons.Count);
+            foreach(var layer in model.Layers) {
+                if(model.Layers.First() == layer || model.Layers.Last() == layer) continue;
+                ret.AddNextLayer(new NeuralLayer(layer.Neurons.Count, ret.NeuronIdAssigner, layer.Name));
+            }
+            ret.Build();
+            //assign new weights
+            for(var i = 0; i < model.Layers.Count; i++) {
+                for(var j = 0; j < model.Layers[i].Neurons.Count; j++) {
+                    for(var k = 0; k < model.Layers[i].Neurons[j].Dendrites.Count; k++) {
+                        ret.model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight = model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight;
+                    }
+                }
+            }
+            return ret;
+        }
 
         public static bool operator ==(NeuralNetwork x, NeuralNetwork y) {
             return x.Equals(y);

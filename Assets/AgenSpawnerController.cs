@@ -9,10 +9,10 @@ using UnityEngine;
 public class AgenSpawnerController : MonoBehaviour {
     private const string NEURAL_PATH_PREFAB = "Neurals/NET{0}.xml";
     private const string MAIN_NETWORK = "Neurals/NETMain.xml";
-    private const int AGENT_LIFE_TIME = 10;
+    private const int AGENT_LIFE_TIME = 8;
     private const int POPULATION_SIZE = 100;
     private const int GENERATION_SIZE = 200;
-    private const int TIME_SPEED = 5;
+    private const int TIME_SPEED = 2;
     public GameObject agentPrefab;
     public GameObject pointerPrefab;
     public GameObject pointerLayer;
@@ -33,11 +33,8 @@ public class AgenSpawnerController : MonoBehaviour {
         } else {
             modelInUse = new NeuralNetwork(403, 3);
             modelInUse.AddNextLayer(new NeuralLayer(400, modelInUse.NeuronIdAssigner, "H(400)"));
-            //modelInUse.AddNextLayer(new NeuralLayer(200, modelInUse.NeuronIdAssigner, "H(200)"));
             modelInUse.AddNextLayer(new NeuralLayer(100, modelInUse.NeuronIdAssigner, "H(100)"));
-            //modelInUse.AddNextLayer(new NeuralLayer(50, modelInUse.NeuronIdAssigner, "H(50)"));
             modelInUse.AddNextLayer(new NeuralLayer(20, modelInUse.NeuronIdAssigner, "H(20)"));
-            modelInUse.AddNextLayer(new NeuralLayer(10, modelInUse.NeuronIdAssigner, "H(10)"));
             modelInUse.Build();
         }
         Time.timeScale = TIME_SPEED;
@@ -53,8 +50,17 @@ public class AgenSpawnerController : MonoBehaviour {
                     Debug.Log("Spawning new agent");
                     currentAgent = Instantiate(agentPrefab);
                     currentAgent.transform.position = transform.position;
-                    currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork =
-                        NeuralNetwork.Mutate(modelInUse, 0.05 + ((100 - generations) / 100) * 0.5);
+                    if(population.Count == 0) {
+                        var differ = new NeuralNetwork(403, 3);
+                        differ.AddNextLayer(new NeuralLayer(400, modelInUse.NeuronIdAssigner, "H(400)"));
+                        differ.AddNextLayer(new NeuralLayer(100, modelInUse.NeuronIdAssigner, "H(100)"));
+                        differ.AddNextLayer(new NeuralLayer(20, modelInUse.NeuronIdAssigner, "H(20)"));
+                        differ.Build();
+                        currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork = differ;
+                    } else {
+                        currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork =
+                        NeuralNetwork.Mutate(modelInUse.Clone(), 0.05 + ((100 - generations) / 100) * 0.1, 2 + ((100 - generations) / 100));
+                    }
                     currentAgent.GetComponent<ForkLiftAgentController>().startPosition = destination;
                     currentAgentSpawningTime = Time.fixedTime;
                     //Debug.Log(string.Format("SpawnedAgent {0} has weght sum of {1}", population.Count, currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork.NetworkWeightSum()));
@@ -74,7 +80,6 @@ public class AgenSpawnerController : MonoBehaviour {
                     currentAgent = null;
                 }
             } else {
-                Time.timeScale = 0;
                 IsBusy = true;
                 var minValue = population.Min(x => x.Item1);
                 var winner1 = population.Where(x => x.Item1 == minValue).First();
@@ -84,25 +89,18 @@ public class AgenSpawnerController : MonoBehaviour {
                 var des1 = NeuralNetwork.Deserialize(winner1.Item2);
                 var des2 = NeuralNetwork.Deserialize(winner2.Item2);
                 var newNetwork = NeuralNetwork.CrossBread(des1, des2);
-                //RemoveOldData();
                 newNetwork.Serialize(MAIN_NETWORK);
                 modelInUse = newNetwork;
+
+                foreach(Transform child in pointerLayer.transform) {
+                    GameObject.Destroy(child.gameObject);
+                }
                 population = new List<Tuple<float, string>>();
                 generations++;
                 IsBusy = false;
-                Time.timeScale = TIME_SPEED;
             }
         } else {
             Destroy(this);
-        }
-
-    }
-
-    private static void RemoveOldData() {
-        var di = new DirectoryInfo("Neurals");
-
-        foreach(var file in di.GetFiles()) {
-            file.Delete();
         }
     }
 }
