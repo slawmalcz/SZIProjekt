@@ -24,10 +24,11 @@ public class Percepton : MonoBehaviour {
             var temp = new Vector4[QUANTIFICATION_DEGREE, QUANTIFICATION_DEGREE];
             for(var i = 0; i < QUANTIFICATION_DEGREE; i++)
                 for(var j = 0; j < QUANTIFICATION_DEGREE; j++) {
+                    var relativePosition = transform.InverseTransformPoint(perceptionVolumes[i, j].perceptionFustum.position);
                     temp[i, j] = new Vector4(
-                        perceptionVolumes[i, j].perceptionFustum.position.x,
-                        perceptionVolumes[i, j].perceptionFustum.position.y,
-                        perceptionVolumes[i, j].perceptionFustum.position.z,
+                        relativePosition.x,
+                        relativePosition.y,
+                        relativePosition.z,
                         perceptionVolumes[i, j].FillingPercentage
                         );
                 }
