@@ -9,94 +9,100 @@ using UnityEngine;
 public class AgenSpawnerController : MonoBehaviour {
     private const string NEURAL_PATH_PREFAB = "Neurals/NET{0}.xml";
     private const string MAIN_NETWORK = "Neurals/NETMain.xml";
-    private const int AGENT_LIFE_TIME = 8;
-    private const int POPULATION_SIZE = 100;
-    private const int GENERATION_SIZE = 200;
-    private const int TIME_SPEED = 2;
+
+    public int AgentLifeTime = 5;
+    public int PopulationSize = 10;
+    public int GenerationSize = 200;
+    public int TimeAcceleration = 1;
+    public int[] networkLayout;
+
+    public double mutationBasicChance = 0.05;
+    public double mutationDegradingCance = 0.1;
+    private double MutationChance => ((GenerationSize - currentGeneration) / GenerationSize) * mutationDegradingCance + mutationBasicChance;
+
+    public double mutationBasicForce = 2;
+    public double mutationDegradingFoerce = 1;
+    private double MutationForce => mutationBasicForce + ((GenerationSize - currentGeneration) / GenerationSize) * mutationDegradingFoerce;
+
     public GameObject agentPrefab;
     public GameObject pointerPrefab;
     public GameObject pointerLayer;
-    private NeuralNetwork modelInUse;
-
     public GameObject destination;
 
+    private NeuralNetwork modelInUse;
     private GameObject currentAgent;
     private float currentAgentSpawningTime;
+
     private List<Tuple<float, string>> population;
-    private int generations = 0;
+    private int currentGeneration = 0;
+
     private bool IsBusy = false;
-    // Start is called before the first frame update
+
+    private double SecondBestResoult => (population.Count < 2) ? double.PositiveInfinity : population.OrderBy(x => x.Item1).ToArray()[1].Item1;
+
     void Start() {
+        //Loading default network layout if needed
+        if(networkLayout == null) networkLayout = new int[] { 406, 1600, 100, 3 };
         population = new List<Tuple<float, string>>();
+        Time.timeScale = TimeAcceleration;
         if(File.Exists(MAIN_NETWORK)) {
+            //Loading exisiting network
             modelInUse = NeuralNetwork.Deserialize(MAIN_NETWORK);
         } else {
-            modelInUse = new NeuralNetwork(403, 3);
-            modelInUse.AddNextLayer(new NeuralLayer(400, modelInUse.NeuronIdAssigner, "H(400)"));
-            modelInUse.AddNextLayer(new NeuralLayer(100, modelInUse.NeuronIdAssigner, "H(100)"));
-            modelInUse.AddNextLayer(new NeuralLayer(20, modelInUse.NeuronIdAssigner, "H(20)"));
+            //Creating new network by given specification
+            modelInUse = new NeuralNetwork(networkLayout.First(), networkLayout.Last());
+            for(var i = 1; i < networkLayout.Length - 1; i++)
+                modelInUse.AddNextLayer(new NeuralLayer(networkLayout[i], modelInUse.NeuronIdAssigner));
             modelInUse.Build();
         }
-        Time.timeScale = TIME_SPEED;
     }
 
-    // Update is called once per frame
     void Update() {
         if(IsBusy) return;
-        if(generations < GENERATION_SIZE) {
-            if(population.Count < POPULATION_SIZE) {
+        if(currentGeneration < GenerationSize) {
+            if(population.Count < PopulationSize) {
                 //Spawning new agent
                 if(currentAgent == null) {
-                    Debug.Log("Spawning new agent");
                     currentAgent = Instantiate(agentPrefab);
                     currentAgent.transform.position = transform.position;
-                    if(population.Count == 0) {
-                        var differ = new NeuralNetwork(403, 3);
-                        differ.AddNextLayer(new NeuralLayer(400, modelInUse.NeuronIdAssigner, "H(400)"));
-                        differ.AddNextLayer(new NeuralLayer(100, modelInUse.NeuronIdAssigner, "H(100)"));
-                        differ.AddNextLayer(new NeuralLayer(20, modelInUse.NeuronIdAssigner, "H(20)"));
-                        differ.Build();
-                        currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork = differ;
-                    } else {
-                        currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork =
-                        NeuralNetwork.Mutate(modelInUse.Clone(), 0.05 + ((100 - generations) / 100) * 0.1, 2 + ((100 - generations) / 100));
-                    }
-                    currentAgent.GetComponent<ForkLiftAgentController>().startPosition = destination;
+                    currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork = NeuralNetwork.Mutate(modelInUse.Clone(), MutationChance, (float)MutationForce);
+                    currentAgent.GetComponent<ForkLiftAgentController>().targetPlace = destination;
                     currentAgentSpawningTime = Time.fixedTime;
-                    //Debug.Log(string.Format("SpawnedAgent {0} has weght sum of {1}", population.Count, currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork.NetworkWeightSum()));
                 }
                 //Ending agent
-                if(currentAgentSpawningTime + AGENT_LIFE_TIME < Time.fixedTime) {
-                    var distance = Vector3.Distance(destination.transform.position, currentAgent.transform.position);
-                    //Debug.Log(distance);
+                if(currentAgentSpawningTime + AgentLifeTime < Time.fixedTime) {
+                    //Calculating succes rate
+                    var succesRate = Vector3.Distance(destination.transform.position, currentAgent.transform.position)
+                        + currentAgent.GetComponent<ForkLiftAgentController>().collisions;
                     var path = string.Format(NEURAL_PATH_PREFAB, population.Count);
-                    currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork.Serialize(path);
-                    population.Add(new Tuple<float, string>(distance, path));
+                    if(succesRate < SecondBestResoult) {
+                        //Seriallization take time and i dont need to save networks with bad resoults
+                        currentAgent.GetComponent<ForkLiftAgentController>().askedNetwork.Serialize(path);
+                    }
+                    population.Add(new Tuple<float, string>(succesRate, path));
                     //Instantiet pointer
                     var pointer = Instantiate(pointerPrefab);
                     pointer.transform.parent = pointerLayer.transform;
                     pointer.transform.Translate(new Vector3(currentAgent.transform.position.x, pointer.transform.position.y, currentAgent.transform.position.z));
+                    //Cleaning after agent
                     Destroy(currentAgent);
                     currentAgent = null;
                 }
             } else {
                 IsBusy = true;
-                var minValue = population.Min(x => x.Item1);
-                var winner1 = population.Where(x => x.Item1 == minValue).First();
-                var winner2 = population.OrderBy(x => x.Item1).Skip(1).FirstOrDefault();
-                Debug.Log(string.Format("Best performace {0} {1}", winner1.Item1, winner1.Item2));
-                Debug.Log(string.Format("Best performace {0} {1}", winner2.Item1, winner2.Item2));
+                population = population.OrderBy(x => x.Item1).ToList();
+                var winner1 = population.First();
+                var winner2 = population.Skip(1).First();
                 var des1 = NeuralNetwork.Deserialize(winner1.Item2);
                 var des2 = NeuralNetwork.Deserialize(winner2.Item2);
                 var newNetwork = NeuralNetwork.CrossBread(des1, des2);
                 newNetwork.Serialize(MAIN_NETWORK);
                 modelInUse = newNetwork;
-
-                foreach(Transform child in pointerLayer.transform) {
+                //Cleaning all pointers
+                foreach(Transform child in pointerLayer.transform)
                     GameObject.Destroy(child.gameObject);
-                }
                 population = new List<Tuple<float, string>>();
-                generations++;
+                currentGeneration++;
                 IsBusy = false;
             }
         } else {

@@ -1,5 +1,4 @@
 ﻿using Assets.Utilities;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,10 +12,12 @@ public class PerceptionVolume : MonoBehaviour {
     }
 
     protected void OnTriggerEnter(Collider other) {
+        if(other.gameObject.CompareTag("Ground")) return;
         detectedObjects.Add(other.gameObject);
     }
 
     protected void OnTriggerExit(Collider other) {
+        if(other.gameObject.CompareTag("Ground")) return;
         detectedObjects.Remove(other.gameObject);
     }
 }

@@ -155,7 +155,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   perception: {fileID: 6156441879503890224}
   startPosition: {fileID: 0}
-  MAX_SPEAD: 100
+  MAX_SPEAD: 1
 --- !u!114 &6156441879503890224
 MonoBehaviour:
   m_ObjectHideFlags: 0

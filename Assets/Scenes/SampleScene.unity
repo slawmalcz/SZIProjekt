@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -127,7 +127,7 @@ GameObject:
   - component: {fileID: 97142914}
   m_Layer: 0
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -792,6 +792,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b97623af7dee637438f88b977e12f342, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  AgentLifeTime: 10
+  PopulationSize: 10
+  GenerationSize: 200
+  TimeAcceleration: 3
+  networkLayout: 96010000400600006400000003000000
+  mutationBasicChance: 0.05
+  mutationDegradingCance: 0.1
+  mutationBasicForce: 2
+  mutationDegradingFoerce: 1
   agentPrefab: {fileID: 6156441879503890225, guid: b0100440cad1ed44b89ec53741a2a718,
     type: 3}
   pointerPrefab: {fileID: 2439998024490615094, guid: f5d7afa287cb7004583bdcb35dd789dd,
