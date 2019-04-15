@@ -6,15 +6,13 @@ namespace Assets.NeuralNetwork {
     public class NeuralLayer {
         public List<Neuron> Neurons { get; set; }
         public string Name { get; set; }
-        public double Weight { get; set; }
-        private Func<int> neuronIdAssigner;
-
+        private readonly Func<int> neuronIdAssigner;
 
         public NeuralLayer(List<Neuron> neurons, List<List<Dendrite>> dendrits, Func<int> neuronIdAssigner, string name = "") {
             Neurons = neurons;
             this.neuronIdAssigner = neuronIdAssigner;
             foreach(var neuron in Neurons)
-                neuron.Dendrites = dendrits.Find(x => x.Any(y => y.NeuronId == neuron.Id));
+                neuron.Dendrites = dendrits.Find(x => x.Any(y => y.neuronId == neuron.Id));
             Name = name;
         }
 

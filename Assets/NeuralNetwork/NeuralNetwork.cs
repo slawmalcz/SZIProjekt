@@ -15,9 +15,7 @@ namespace Assets.NeuralNetwork {
         private List<NeuralLayer> hiddenLayers;
 
         public NeuralNetwork(int inputNodeCount, int outputNodeCount) {
-            model = new NetworkModel() {
-                dendriteIdAssigner = DendriteIdAssigner
-            };
+            model = new NetworkModel(DendriteIdAssigner);
             inputLayer = new NeuralLayer(inputNodeCount, NeuronIdAssigner, "INPUT LAYER");
             outputLayer = new NeuralLayer(outputNodeCount, NeuronIdAssigner, "OUTPUT LAYER");
             hiddenLayers = new List<NeuralLayer>();
@@ -25,42 +23,32 @@ namespace Assets.NeuralNetwork {
 
         public void AddNextLayer(NeuralLayer nextLayer) => hiddenLayers.Add(nextLayer);
 
-        public void Build(bool debugMode = false, bool fullInspect = false) {
+        public void Build() {
             model.AddLayer(inputLayer);
             hiddenLayers.ForEach(x => model.AddLayer(x));
             model.AddLayer(outputLayer);
             model.Build();
-            if(debugMode) {
-                if(fullInspect) {
-
-                } else {
-                    Debug.Log("Previev of builded network:");
-                    Debug.Log(model.Print());
-                }
-            }
         }
 
         public List<double> AskNetwork(List<float> inputVector) => model.AskNetwork(inputVector);
-
-        public double NetworkWeightSum() => model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Sum(z => z.SynapticWeight)));
 
         //STATIC MUTATROS AND CROSSBREEDERS
 
         public static NeuralNetwork CrossBread(NeuralNetwork father, NeuralNetwork mother) {
             if(father == mother) {
-                var tempModel = father;
+                var tempModel = father.Clone();
                 for(var layerCounter = 0; layerCounter < tempModel.model.Layers.Count; layerCounter++) {
-                    var handeldLayer = tempModel.model.Layers[layerCounter];
-                    for(var neuronCounter = 0; neuronCounter < handeldLayer.Neurons.Count; neuronCounter++) {
-                        var handledNeuron = handeldLayer.Neurons[neuronCounter];
+                    for(var neuronCounter = 0; neuronCounter < father.model.Layers[layerCounter].Neurons.Count; neuronCounter++) {
+                        var handledNeuron = father.model.Layers[layerCounter].Neurons[neuronCounter];
+                        tempModel.model.Layers[layerCounter].Neurons[neuronCounter].bias =
+                            (handledNeuron.bias + mother.model.Layers[layerCounter].Neurons[neuronCounter].bias) / 2;
                         for(var dendriteCounter = 0; dendriteCounter < handledNeuron.Dendrites.Count; dendriteCounter++) {
                             var handledDendrite = handledNeuron.Dendrites[dendriteCounter];
                             tempModel.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight =
-                                (handledDendrite.SynapticWeight + mother.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight)/2;
+                                (handledDendrite.SynapticWeight + mother.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight) / 2;
                         }
                     }
                 }
-
                 return tempModel;
             } else {
                 Debug.LogError("Given network are difrent problem class. [They are not Eq]");
@@ -68,19 +56,20 @@ namespace Assets.NeuralNetwork {
             }
         }
 
-        public static NeuralNetwork Mutate(NeuralNetwork network,double mutationPercentage = MUTATOR_PERCENTAGE,float mutationForce = 0.1f) {
-            var ret = (NeuralNetwork)network.MemberwiseClone();
+        public static NeuralNetwork Mutate(NeuralNetwork network, double mutationPercentage = MUTATOR_PERCENTAGE, float mutationForce = 0.1f) {
+            var ret = network.Clone();
             var random = new System.Random();
             for(var layerCounter = 0; layerCounter < ret.model.Layers.Count; layerCounter++) {
                 var handeldLayer = ret.model.Layers[layerCounter];
                 for(var neuronCounter = 0; neuronCounter < handeldLayer.Neurons.Count; neuronCounter++) {
                     var handledNeuron = handeldLayer.Neurons[neuronCounter];
+                    if(random.NextDouble() < MUTATOR_PERCENTAGE) {
+                        var mutator = (random.NextDouble() * 2 - 1) * mutationForce;
+                        ret.model.Layers[layerCounter].Neurons[neuronCounter].bias = handledNeuron.bias + handledNeuron.bias * mutator;
+                    }
                     for(var dendriteCounter = 0; dendriteCounter < handledNeuron.Dendrites.Count; dendriteCounter++) {
-                        var handledDendrite = handledNeuron.Dendrites[dendriteCounter];
-
-                        //Decide if element shoud be modified
                         if(random.NextDouble() < MUTATOR_PERCENTAGE) {
-                            //mutate element
+                            var handledDendrite = handledNeuron.Dendrites[dendriteCounter];
                             var mutator = (random.NextDouble() * 2 - 1) * mutationForce;
                             ret.model.Layers[layerCounter].Neurons[neuronCounter].Dendrites[dendriteCounter].SynapticWeight = handledDendrite.SynapticWeight + handledDendrite.SynapticWeight * mutator;
                         }
@@ -93,15 +82,9 @@ namespace Assets.NeuralNetwork {
         //ID ASSIGNERS
 
         private int nextNeuronId = 0;
-        public int NeuronIdAssigner() {
-            nextNeuronId++;
-            return nextNeuronId - 1;
-        }
+        public int NeuronIdAssigner() => nextNeuronId++ - 1;
         private int nextDendriteId = 0;
-        public int DendriteIdAssigner() {
-            nextDendriteId++;
-            return nextDendriteId - 1;
-        }
+        public int DendriteIdAssigner() => nextDendriteId++ - 1;
 
         // SERIALIZATION AND DESERIALIZATION
 
@@ -120,18 +103,18 @@ namespace Assets.NeuralNetwork {
             XmlAttributeEventHandler(Serializer_UnknownAttribute);
             var fs = new FileStream(fileName, FileMode.Open);
             var model = (NetworkModel)serializer.Deserialize(fs);
-            var ret = new NeuralNetwork(model.Layers.First().Neurons.Count,model.Layers.Last().Neurons.Count);
+            var ret = new NeuralNetwork(model.Layers.First().Neurons.Count, model.Layers.Last().Neurons.Count);
             foreach(var layer in model.Layers) {
                 if(model.Layers.First() == layer || model.Layers.Last() == layer) continue;
-                ret.AddNextLayer(new NeuralLayer(layer.Neurons.Count,ret.NeuronIdAssigner,layer.Name));
+                ret.AddNextLayer(new NeuralLayer(layer.Neurons.Count, ret.NeuronIdAssigner, layer.Name));
             }
             ret.Build();
             //assign new weights
-            for(var i = 0;i< model.Layers.Count; i++) {
+            for(var i = 0; i < model.Layers.Count; i++) {
                 for(var j = 0; j < model.Layers[i].Neurons.Count; j++) {
-                    for(var k = 0; k < model.Layers[i].Neurons[j].Dendrites.Count; k++) {
+                    ret.model.Layers[i].Neurons[j].bias = model.Layers[i].Neurons[j].bias;
+                    for(var k = 0; k < model.Layers[i].Neurons[j].Dendrites.Count; k++)
                         ret.model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight = model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight;
-                    }
                 }
             }
             return ret;
@@ -154,9 +137,9 @@ namespace Assets.NeuralNetwork {
             //assign new weights
             for(var i = 0; i < model.Layers.Count; i++) {
                 for(var j = 0; j < model.Layers[i].Neurons.Count; j++) {
-                    for(var k = 0; k < model.Layers[i].Neurons[j].Dendrites.Count; k++) {
+                    ret.model.Layers[i].Neurons[j].bias = model.Layers[i].Neurons[j].bias;
+                    for(var k = 0; k < model.Layers[i].Neurons[j].Dendrites.Count; k++)
                         ret.model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight = model.Layers[i].Neurons[j].Dendrites[k].SynapticWeight;
-                    }
                 }
             }
             return ret;
@@ -172,13 +155,12 @@ namespace Assets.NeuralNetwork {
         public override bool Equals(object value) {
             var other = value as NeuralNetwork;
             //TODO:: That's a lie
-            return true;
-                /*!System.Object.ReferenceEquals(null, other)
-                && model.Layers.Count == other.model.Layers.Count //Layers count equality
-                && model.Layers.Sum(x => x.Neurons.Count) == other.model.Layers.Sum(x => x.Neurons.Count)//Neuron count equality
-                && model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Count)) == other.model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Count)) // Dendrites count equality
-                && model.Layers.Any(x => other.model.Layers.Any(y => y.Neurons.Count == x.Neurons.Count && y.Name == x.Name)); // Neurons in Layers Count
-                */
+            //return true;
+            return !System.Object.ReferenceEquals(null, other)
+            && model.Layers.Count == other.model.Layers.Count //Layers count equality
+            && model.Layers.Sum(x => x.Neurons.Count) == other.model.Layers.Sum(x => x.Neurons.Count);//Neuron count equality
+            //&& model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Count)) == other.model.Layers.Sum(x => x.Neurons.Sum(y => y.Dendrites.Count)) // Dendrites count equality
+            //&& model.Layers.Any(x => other.model.Layers.Any(y => y.Neurons.Count == x.Neurons.Count && y.Name == x.Name)); // Neurons in Layers Count
         }
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ForkLiftAgentController : MonoBehaviour {
     public Percepton perception;
-    public GameObject startPosition;
+    public GameObject targetPlace;
     public NeuralNetwork askedNetwork;
 
     public float MAX_SPEAD = 10;
@@ -16,14 +16,17 @@ public class ForkLiftAgentController : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         var networkData = new List<float> {
-            startPosition.transform.position.x,
-            startPosition.transform.position.y,
-            startPosition.transform.position.z
+            targetPlace.transform.position.x,
+            targetPlace.transform.position.y,
+            targetPlace.transform.position.z,
+            transform.position.x,
+            transform.position.y,
+            transform.position.z,
             };
         networkData.AddRange(perception.GetDetectionData());
         var answer = askedNetwork.AskNetwork(networkData);
-        //TODO:: Not shure of this
-        var destination = new Vector3((float)answer[0], /*(float)answer[1]*/ 0, (float)answer[2]);
+        //Conversion form vector 0..1 to -1..1
+        var destination = new Vector3((float)answer[0] * 2 - 1, (float)answer[1] * 2 - 1, (float)answer[2] * 2 - 1);
         var pointToTravel = destination * Time.deltaTime * MAX_SPEAD;
         var calculatedDestination = transform.position + pointToTravel;
         var lookAtPoint = calculatedDestination;

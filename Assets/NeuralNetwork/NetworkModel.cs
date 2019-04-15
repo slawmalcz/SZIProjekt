@@ -9,8 +9,12 @@ namespace Assets.NeuralNetwork {
     public class NetworkModel {
         public List<NeuralLayer> Layers { get; set; }
         public bool IsBuild { get; set; }
-        [XmlIgnoreAttribute]
-        public Func<int> dendriteIdAssigner;
+        [XmlIgnore] private readonly Func<int> dendriteIdAssigner;
+
+        public NetworkModel(Func<int> dendriteIdAssigner) {
+            this.dendriteIdAssigner = dendriteIdAssigner;
+            Layers = new List<NeuralLayer>();
+        }
 
         public NetworkModel() => Layers = new List<NeuralLayer>();
 
@@ -22,39 +26,25 @@ namespace Assets.NeuralNetwork {
         }
 
         public void Build() {
-            for(var i = 0; i < Layers.Count - 1; i++) {
+            for(var i = 0; i < Layers.Count - 1; i++)
                 CreateNetwork(Layers[i], Layers[i + 1]);
-            }
             IsBuild = true;
         }
 
         public List<double> AskNetwork(List<float> inputVector) {
             if(Layers.First().Neurons.Count != inputVector.Count)
                 Debug.LogError($"Network have {Layers.First().Neurons.Count} inputs. But input vector have {inputVector.Count} positions");
-            //Puting input data in first layer
             for(var i = 0; i < inputVector.Count; i++)
                 Layers.First().Neurons[i].Dendrites.First().InputPulse = new Pulse() { Value = inputVector[i] };
-            //Pushing data throu network
             Layers.ForEach(x => x.Forward());
-            //Reading outputvalue
             return Layers.Last().Neurons.Select(x => x.OutputPulse.Value).ToList();
-        }
-
-        public string Print() {
-            var ret = "";
-            ret = string.Format("{0,10}|{1,10} \n", "Name", "Neurons");
-
-            foreach(var element in Layers)
-                ret += string.Format("{0,10}|{1,10} \n", element.Name, element.Neurons.Count);
-            return ret;
         }
 
         private void CreateNetwork(NeuralLayer connectingFrom, NeuralLayer connectingTo) {
             foreach(var to in connectingTo.Neurons) {
                 to.Dendrites = new List<Dendrite>();
-                foreach(var from in connectingFrom.Neurons) {
+                foreach(var from in connectingFrom.Neurons)
                     to.Dendrites.Add(new Dendrite(from.Id, dendriteIdAssigner) { InputPulse = from.OutputPulse });
-                }
             }
         }
     }

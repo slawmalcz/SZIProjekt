@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Utilities {
     public class BoxParameters {
@@ -30,17 +25,13 @@ namespace Assets.Utilities {
             upperZBoundary = position.z + (size.z / 2);
         }
 
-        public BoxParameters(BoxCollider collider) : this(collider.transform.position, collider.transform.lossyScale) {
-        }
+        public BoxParameters(BoxCollider collider) : this(collider.transform.position, collider.transform.lossyScale) { }
 
         public BoxParameters(float lowerXBoundary, float upperXBoundary, float lowerYBoundary, float upperYBoundary, float lowerZBoundary, float upperZBoundary) :
             this(new Vector3((lowerXBoundary + upperXBoundary) / 2, (lowerYBoundary + upperYBoundary) / 2, (lowerZBoundary + lowerZBoundary) / 2),
-                  new Vector3((upperXBoundary - lowerXBoundary), (upperYBoundary - lowerYBoundary), (upperZBoundary - lowerZBoundary))) {
-        }
+                  new Vector3((upperXBoundary - lowerXBoundary), (upperYBoundary - lowerYBoundary), (upperZBoundary - lowerZBoundary))) { }
 
-        public static BoxParameters operator -(BoxParameters x, BoxParameters y) {
-            return Substract(x, y);
-        }
+        public static BoxParameters operator -(BoxParameters x, BoxParameters y) => Substract(x, y);
 
         public static BoxParameters Substract(BoxParameters from, BoxParameters substract) {
             float newLowerXBoundry = 0;
