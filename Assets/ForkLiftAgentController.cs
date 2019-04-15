@@ -18,7 +18,10 @@ public class ForkLiftAgentController : MonoBehaviour {
         var networkData = new List<float> {
             startPosition.transform.position.x,
             startPosition.transform.position.y,
-            startPosition.transform.position.z
+            startPosition.transform.position.z,
+            transform.position.x,
+            transform.position.y,
+            transform.position.z
             };
         networkData.AddRange(perception.GetDetectionData());
         var answer = askedNetwork.AskNetwork(networkData);

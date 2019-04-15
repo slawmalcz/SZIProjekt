@@ -31,7 +31,7 @@ public class AgenSpawnerController : MonoBehaviour {
         if(File.Exists(MAIN_NETWORK)) {
             modelInUse = NeuralNetwork.Deserialize(MAIN_NETWORK);
         } else {
-            modelInUse = new NeuralNetwork(403, 3);
+            modelInUse = new NeuralNetwork(406, 3);
             modelInUse.AddNextLayer(new NeuralLayer(400, modelInUse.NeuronIdAssigner, "H(400)"));
             modelInUse.AddNextLayer(new NeuralLayer(100, modelInUse.NeuronIdAssigner, "H(100)"));
             modelInUse.AddNextLayer(new NeuralLayer(20, modelInUse.NeuronIdAssigner, "H(20)"));
